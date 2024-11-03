@@ -287,34 +287,33 @@ class ImageEditDialogFragment : DialogFragment() {
     }
 
     private fun saveEditedImage() {
-        // Create an AlertDialog to confirm saving
-        AlertDialog.Builder(requireContext())
-            .setTitle("Xác nhận lưu")
-            .setMessage("Bạn có chắc chắn muốn lưu hình ảnh này không?")
-            .setPositiveButton("Có") { _, _ ->
-                // Save the combined bitmap (original + drawings)
-                val file = File(requireContext().cacheDir, "edited_image_${System.currentTimeMillis()}.png")
-                try {
-                    val outputStream = FileOutputStream(file)
-                    combinedBitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream)
-                    outputStream.flush()
-                    outputStream.close()
+        // Tạo một bitmap từ imageView với các sửa đổi
+        val bitmap = Bitmap.createBitmap(imageView.width, imageView.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        imageView.draw(canvas) // Vẽ nội dung của ImageView lên canvas
 
-                    // Notify the main activity of the new URI and close the dialog
-                    onImageEditedListener?.onImageAdded(Uri.fromFile(file))
-                    dismiss()
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    AlertDialog.Builder(requireContext())
-                        .setTitle("Lỗi")
-                        .setMessage("Không thể lưu hình ảnh.")
-                        .setPositiveButton("OK", null)
-                        .show()
-                }
-            }
-            .setNegativeButton("Không", null) // Dismiss the dialog if the user chooses "Không"
-            .show()
+        // Lưu bitmap vào một tệp trong thư mục cache
+        val file = File(requireContext().cacheDir, "edited_image_${System.currentTimeMillis()}.png")
+        try {
+            val outputStream = file.outputStream()
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream) // Nén bitmap thành PNG
+            outputStream.flush()
+            outputStream.close()
+
+            // Thông báo cho Activity chính về URI mới và đóng dialog
+            onImageEditedListener?.onImageAdded(Uri.fromFile(file))
+            dismiss()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            AlertDialog.Builder(requireContext())
+                .setTitle("Lỗi")
+                .setMessage("Không thể lưu hình ảnh.")
+                .setPositiveButton("OK", null)
+                .show()
+        }
     }
+
 
 
 
